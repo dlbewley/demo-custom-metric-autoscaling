@@ -1,0 +1,15 @@
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  labels:
+    app: prometheus-example-app
+  name: prometheus-example-app
+spec:
+  port:
+    targetPort: web
+  to:
+    kind: Service
+    name: prometheus-example-app
+    weight: 100
+  wildcardPolicy: None

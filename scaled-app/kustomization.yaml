@@ -11,4 +11,4 @@ resources:
   - secret.yaml
   - role.yaml
   - rolebinding.yaml
-  - scaled-app.yaml
+  - static-app.yaml

@@ -3,3 +3,19 @@
 This application exists to expose a metrics endpoint that proffers custom metrics used for scaling a  link:../scaled-app[second application].
 
 This metric may be tangentially related to the load oc the scaled app. For instance it may gather and report on a queue depth or work backlog. However, the current https://github.com/rhobs/prometheus-example-app[app referenced here] does not.
+
+[source,bash]
+----
+oc apply -k custom-metric-app
+  namespace/keda-test created
+  service/prometheus-example-app created
+  deployment.apps/prometheus-example-app created
+  servicemonitor.monitoring.coreos.com/prometheus-example-monitor created
+  route.route.openshift.io/prometheus-example-app created
+ROUTE=$(oc get route prometheus-example-app -o jsonpath='{.spec.host}')
+curl $ROUTE/metrics
+
+# make something happen
+curl $ROUTE
+curl $ROUTE/metrics
+----

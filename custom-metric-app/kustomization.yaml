@@ -11,9 +11,5 @@ resources:
   - deployment.yaml
   - service.yaml
   - servicemonitor.yaml
-  # - configmap.yaml
-
-# secretGenerator:
-#   - name: nginx-sidecar-conf
-#     files:
-#       - nginx.conf
+  # optional
+  - route.yaml

@@ -28,8 +28,9 @@ spec:
       metadata:
         namespace: keda-test
         serverAddress: https://thanos-querier.openshift-monitoring.svc.cluster.local:9092
-        metricName: version
+        metricName: http_requests_total
         # job corresponds to 'app' label value on deployment
-        query: version{job="prometheus-example-app"}[1m]
+        # query: version{job="prometheus-example-app"}[1m]
+        query: sum(rate(http_requests_total{job="prometheus-example-app"}[1m]))
         threshold: '5' 
         authRef: keda-trigger-auth-prometheus

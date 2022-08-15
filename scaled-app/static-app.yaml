@@ -123,3 +123,21 @@ spec:
     deployment: static-app
 status:
   loadBalancer: {}
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  creationTimestamp: null
+  labels:
+    app: static-app
+    app.kubernetes.io/component: static-app
+    app.kubernetes.io/instance: static-app
+  name: static-app
+spec:
+  port:
+    targetPort: 8080-tcp
+  to:
+    kind: ""
+    name: static-app
+    weight: null
+status: {}

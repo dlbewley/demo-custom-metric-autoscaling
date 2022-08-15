@@ -1,3 +1,34 @@
 = Deploy Scaled-App
 
 This is a sample application that is scaled by virtue of custom metrics exported from link:../custom-metric/[custom metric app].
+
+[source,bash]
+----
+oc apply -k scaled-app
+  namespace/keda-test unchanged
+  serviceaccount/thanos created
+  role.rbac.authorization.k8s.io/thanos-metrics-reader created
+  rolebinding.rbac.authorization.k8s.io/thanos-metrics-reader created
+  secret/thanos-token created
+  service/static-app created
+  deployment.apps/static-app created
+  buildconfig.build.openshift.io/static-app created
+  imagestream.image.openshift.io/static-app created
+  scaledobject.keda.sh/static-app created
+  triggerauthentication.keda.sh/keda-trigger-auth-prometheus created
+  route.route.openshift.io/static-app created
+
+oc get deployment,scaledobject,hpa -n keda-test
+NAME                                     READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/prometheus-example-app   1/1     1            1           3m15s
+deployment.apps/static-app               0/1     1            0           48s
+
+NAME                              SCALETARGETKIND      SCALETARGETNAME   MIN   MAX   TRIGGERS     AUTHENTICATION   READY   ACTIVE   FALLBACK   AGE
+scaledobject.keda.sh/static-app   apps/v1.Deployment   static-app        1     10    prometheus                    False   False    False      48s
+
+NAME                                                      REFERENCE               TARGETS             MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/keda-hpa-static-app   Deployment/static-app   <unknown>/5 (avg)   1         10        1          47s
+----
+
+[quote,https://access.redhat.com/articles/6718611]
+For autoscaling, KEDA uses different scalers and Prometheus is one of them. In Openshift, Prometheus metrics can be fetched from Thanos Query Service. This service is needed to authenticate via bearer token. So, KEDA with Thanos query service is authenticated using bearer token authentication.
