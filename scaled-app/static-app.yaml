@@ -1,0 +1,125 @@
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  annotations:
+    openshift.io/generated-by: OpenShiftNewApp
+  creationTimestamp: null
+  labels:
+    app: static-app
+    app.kubernetes.io/component: static-app
+    app.kubernetes.io/instance: static-app
+  name: static-app
+spec:
+  lookupPolicy:
+    local: false
+status:
+  dockerImageRepository: ""
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  annotations:
+    openshift.io/generated-by: OpenShiftNewApp
+  creationTimestamp: null
+  labels:
+    app: static-app
+    app.kubernetes.io/component: static-app
+    app.kubernetes.io/instance: static-app
+  name: static-app
+spec:
+  nodeSelector: null
+  output:
+    to:
+      kind: ImageStreamTag
+      name: static-app:latest
+  postCommit: {}
+  resources: {}
+  source:
+    contextDir: htdocs
+    git:
+      ref: dev
+      uri: https://github.com/dlbewley/static.git
+    type: Git
+  strategy:
+    sourceStrategy:
+      from:
+        kind: ImageStreamTag
+        name: nginx:1.20-ubi8
+        namespace: openshift
+    type: Source
+  triggers:
+  - github:
+      secret: 07E2a5yTofDIND7glPn2
+    type: GitHub
+  - generic:
+      secret: d3IwjN_UvSk9cU2QP2QI
+    type: Generic
+  - type: ConfigChange
+  - imageChange: {}
+    type: ImageChange
+status:
+  lastVersion: 0
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    image.openshift.io/triggers: '[{"from":{"kind":"ImageStreamTag","name":"static-app:latest"},"fieldPath":"spec.template.spec.containers[?(@.name==\"static-app\")].image"}]'
+    openshift.io/generated-by: OpenShiftNewApp
+  creationTimestamp: null
+  labels:
+    app: static-app
+    app.kubernetes.io/component: static-app
+    app.kubernetes.io/instance: static-app
+  name: static-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      deployment: static-app
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        openshift.io/generated-by: OpenShiftNewApp
+      creationTimestamp: null
+      labels:
+        deployment: static-app
+    spec:
+      containers:
+      - image: ' '
+        name: static-app
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        - containerPort: 8443
+          protocol: TCP
+        resources: {}
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    openshift.io/generated-by: OpenShiftNewApp
+  creationTimestamp: null
+  labels:
+    app: static-app
+    app.kubernetes.io/component: static-app
+    app.kubernetes.io/instance: static-app
+  name: static-app
+spec:
+  ports:
+  - name: 8080-tcp
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  - name: 8443-tcp
+    port: 8443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    deployment: static-app
+status:
+  loadBalancer: {}

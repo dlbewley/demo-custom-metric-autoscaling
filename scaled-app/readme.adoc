@@ -1,0 +1,3 @@
+= Deploy Scaled-App
+
+This is a sample application that is scaled by virtue of custom metrics exported from link:../custom-metric/[custom metric app].

@@ -1,0 +1,35 @@
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: static-app
+spec:
+  scaleTargetRef:
+    api: apps/v1 
+    name: static-app
+    kind: Deployment 
+    # envSourceContainerName: .spec.template.spec.containers[0] 
+  cooldownPeriod:  200 
+  maxReplicaCount: 10 
+  minReplicaCount: 1 
+  pollingInterval: 30 
+  advanced:
+    restoreToOriginalReplicaCount: false 
+    horizontalPodAutoscalerConfig:
+      behavior: 
+        scaleDown:
+          stabilizationWindowSeconds: 300
+          policies:
+          - type: Percent
+            value: 100
+            periodSeconds: 15
+  triggers:
+    - type: prometheus 
+      metadata:
+        namespace: keda-test
+        serverAddress: https://thanos-querier.openshift-monitoring.svc.cluster.local:9092
+        metricName: version
+        # job corresponds to 'app' label value on deployment
+        query: version{job="prometheus-example-app"}[1m]
+        threshold: '5' 
+        authRef: keda-trigger-auth-prometheus

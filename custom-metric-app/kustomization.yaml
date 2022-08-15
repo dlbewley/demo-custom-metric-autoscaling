@@ -1,0 +1,19 @@
+---
+# https://github.com/rhobs/prometheus-example-app
+
+namespace: keda-test
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+resources:
+  - namespace.yaml
+  - deployment.yaml
+  - service.yaml
+  - servicemonitor.yaml
+  # - configmap.yaml
+
+# secretGenerator:
+#   - name: nginx-sidecar-conf
+#     files:
+#       - nginx.conf

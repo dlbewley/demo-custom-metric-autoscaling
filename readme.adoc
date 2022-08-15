@@ -1,0 +1,190 @@
+:ocp-ver: 4.10
+:cluster-name: hub
+= Demo Using Custom Prometheus Metrics for OpenShift Autoscaling with KEDA
+
+= Demo Custom Metrics for Autoscaling using KEDA on Openshift
+
+image:img/keda-autoscaling.png[]
+
+== Prerequisites
+
+=== Enable User Workload Monitoring
+
+* https://docs.openshift.com/container-platform/{ocp-ver}/monitoring/enabling-monitoring-for-user-defined-projects.html[OpenShift user workload monitoring]
+
+[source,bash]
+----
+oc extract configmap/cluster-monitoring-config \
+   -n openshift-monitoring --to=-\
+  | yq eval '.enableUserWorkload = true' - > config.yaml
+oc set data configmap/cluster-monitoring-config \
+  --from-file=config.yaml -n openshift-monitoring 
+----
+
+
+include::operator/readme.adoc[leveloffset=+2]
+
+[source,bash]
+----
+oc apply -k operator
+----
+
+include::custom-metric-app/readme.adoc[leveloffset=+1]
+
+[source,bash]
+----
+oc apply -k custom-metric
+----
+
+
+include::scaled-app/readme.adoc[leveloffset=+1]
+
+[source,bash]
+----
+oc apply -k scaled-app
+----
+
+[quote,https://access.redhat.com/articles/6718611]
+For autoscaling, KEDA uses different scalers and Prometheus is one of them. In Openshift, Prometheus metrics can be fetched from Thanos Query Service. This service is needed to authenticate via bearer token. So, KEDA with Thanos query service is authenticated using bearer token authentication.
+
+
+= old docs
+
+:ocp-ver: 4.10
+:cluster-name: hub
+:install-doc-title: Using Custom Prometheus Metrics for OpenShift Autoscaling with KEDA
+// include::meta.adoc[]
+
+= Using Custom Prometheus Metrics for OpenShift Autoscaling with KEDA
+
+.Docs
+* https://docs.openshift.com/container-platform/{ocp-ver}/nodes/pods/nodes-pods-autoscaling-custom.html
+* https://access.redhat.com/articles/6718611[Autoscaling for RGW in ODF via HPA using KEDA]
+ 
+== Prereqs
+
+.Steps
+* Enable user workload monitoring
+* Install "Keda" operator
+* Deploy KedaController
+* Create Service account, role, rolebinding
+* Get token from service account
+
+See user workload monitoring <https://docs.openshift.com/container-platform/{ocp-ver}/monitoring/enabling-monitoring-for-user-defined-projects.html>
+
+* Ref: https://access.redhat.com/articles/6675491[Enabling TLS in ServiceMonitor]
+Get "https://thanos-querier.openshift-monitoring.svc.cluster.local:9092/api/v1/query?query=version&time=2022-08-11T22:59:20Z&namespace=kedatest": x509: certificate signed by unknown authority
+
+=== Enabling Keda Operator
+
+[WARNING]
+This is not needed 
+
+Create cm for ingress CA certs
+
+[source,bash]
+----
+cat <<EOF | oc create -n openshift-keda -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    # ensure CA certs are injected into pod
+    service.beta.openshift.io/inject-cabundle: "true"
+  labels:
+    config.openshift.io/inject-trusted-cabundle: "true"
+  name: serving-certs-ca-bundle
+data: {}
+EOF
+
+oc set volume deployment/keda-operator \
+ --overwrite \
+ -n openshift-keda \
+ -t configmap \
+ --name ca-cert-bundle \
+ --read-only=true \
+ --mount-path /etc/pki/ca-trust/extracted/pem \
+ --configmap-name serving-certs-ca-bundle
+
+ --configmap-name openshift-service-ca.crt
+----
+
+=== Enabling monitoring for user-defined projects
+
+[source,bash]
+----
+oc extract configmap/cluster-monitoring-config --to=- -n openshift-monitoring \
+  | yq eval '.enableUserWorkload = true' - > config.yaml
+oc set data configmap/cluster-monitoring-config --from-file=config.yaml -n openshift-monitoring 
+----
+
+=== Granting users permission to monitor user-defined projects
+
+.Roles
+* `monitoring-rules-view` grants read access to PrometheusRule custom resources for a project.
+* `monitoring-rules-edit` grants create, modify, and deleting PrometheusRule custom resources for a project.
+* `monitoring-edit` grants `monitoring-rules-edit` plus create new scrape targets for services or pods. With this role, you can also create, modify, and delete ServiceMonitor and PodMonitor resources.
+
+Grant `monitoring-edit` role.
+
+== Deploying a sample service
+
+* https://docs.openshift.com/container-platform/{ocp-ver}/monitoring/managing-metrics.html 
+* https://github.com/rhobs/prometheus-example-app
+
+link:demo/keda/[]
+
+[source,bash]
+oc apply -k demo/keda/custom-metric
+oc expose service prometheus-example-app
+
+==== Install Custom Metrics Autoscaler Operator
+
+[source,bash]
+oc apply -k demo/keda/operator
+oc get all -n openshift-keda
+
+=== View Example metrics
+
+oc policy add-role-to-user admin dev -n keda-test
+
+
+* Terminal 
+
+[source,bash]
+----
+ROUTE=$(oc get route prometheus-example-app -o jsonpath='{.spec.host}')
+curl $ROUTE/metrics
+# HELP version Version information about this binary
+# TYPE version gauge
+version{version="v0.4.1"} 1
+# create some traffic stats then retry above
+curl $ROUTE
+----
+
+
+* Web Console
+
+Go to promql query and search for "version"
+
+=== Managing metrics targets
+
+https://docs.openshift.com/container-platform/{ocp-ver}/monitoring/managing-metrics-targets.html
+
+As admin Observe -> Targets -> filter to keda-test namespace. 
+
+Target http://10.128.5.43:8080/metrics corresponds to endpoint of service prometheus-example-app
+
+=== Scale an app
+
+https://keda.sh/docs/2.8/scalers/prometheus/
+
+oc create -f static-app.yaml
+
+
+== Problems
+
+* When using Thanos in the scaledobject I get a cert fail
+* When using Prometheus or Thanos I can not seem to name the metric properly.
+
+0s          Warning   FailedComputeMetricsReplicas   horizontalpodautoscaler/keda-hpa-scaledobject   invalid metrics (1 invalid out of 1), first error is: failed to get s0-prometheus-http_requests_total external metric: unable to get external metric keda-test/s0-prometheus-http_requests_total/&LabelSelector{MatchLabels:map[string]string{scaledobject.keda.sh/name: scaledobject,},MatchExpressions:[]LabelSelectorRequirement{},}: unable to fetch metrics from external metrics API: no matching metrics found for s0-prometheus-http_requests_total

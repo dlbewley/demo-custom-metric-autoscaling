@@ -1,0 +1,3 @@
+= Deploy Custom Metrics Autoscaler Operator 
+
+Deploys the OpenShift https://github.com/openshift/custom-metrics-autoscaler-operator[Custom Metric Autoscaler operator] which is downstream from https://keda.sh/[KEDA.sh].

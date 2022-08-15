@@ -1,0 +1,14 @@
+---
+# https://github.com/rhobs/prometheus-example-app
+
+namespace: keda-test
+
+resources:
+  - namespace.yaml
+  - scaledobject.yaml
+  - triggerauthentication.yaml
+  - serviceaccount.yaml
+  - secret.yaml
+  - role.yaml
+  - rolebinding.yaml
+  - scaled-app.yaml
