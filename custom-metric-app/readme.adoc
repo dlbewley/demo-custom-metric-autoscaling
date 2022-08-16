@@ -30,4 +30,4 @@ curl $ROUTE
 == TODO
 
 [TIP]
-Create a new app with more pertinent metric example.
+Create a new app with more pertinent metric example. Like returning the number of Todos from a work queue.
