@@ -12,10 +12,22 @@ oc apply -k custom-metric-app
   deployment.apps/prometheus-example-app created
   servicemonitor.monitoring.coreos.com/prometheus-example-monitor created
   route.route.openshift.io/prometheus-example-app created
+----
+
+== View Example metrics
+
+[source,bash]
+----
 ROUTE=$(oc get route prometheus-example-app -o jsonpath='{.spec.host}')
 curl $ROUTE/metrics
-
-# make something happen
+# HELP version Version information about this binary
+# TYPE version gauge
+version{version="v0.4.1"} 1
+# create some traffic stats then retry above
 curl $ROUTE
-curl $ROUTE/metrics
 ----
+
+== TODO
+
+[TIP]
+Create a new app with more pertinent metric example.

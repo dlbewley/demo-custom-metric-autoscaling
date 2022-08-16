@@ -19,16 +19,14 @@ oc apply -k scaled-app
   route.route.openshift.io/static-app created
 
 oc get deployment,scaledobject,hpa -n keda-test
+
 NAME                                     READY   UP-TO-DATE   AVAILABLE   AGE
-deployment.apps/prometheus-example-app   1/1     1            1           3m15s
-deployment.apps/static-app               0/1     1            0           48s
+deployment.apps/prometheus-example-app   1/1     1            1           37m
+deployment.apps/static-app               1/1     1            1           36m
 
-NAME                              SCALETARGETKIND      SCALETARGETNAME   MIN   MAX   TRIGGERS     AUTHENTICATION   READY   ACTIVE   FALLBACK   AGE
-scaledobject.keda.sh/static-app   apps/v1.Deployment   static-app        1     10    prometheus                    False   False    False      48s
+NAME                              SCALETARGETKIND      SCALETARGETNAME   MIN   MAX   TRIGGERS     AUTHENTICATION                 READY   ACTIVE   FALLBACK   AGE
+scaledobject.keda.sh/static-app   apps/v1.Deployment   static-app        1     10    prometheus   keda-trigger-auth-prometheus   True    False    False      36m
 
-NAME                                                      REFERENCE               TARGETS             MINPODS   MAXPODS   REPLICAS   AGE
-horizontalpodautoscaler.autoscaling/keda-hpa-static-app   Deployment/static-app   <unknown>/5 (avg)   1         10        1          47s
+NAME                                                      REFERENCE               TARGETS     MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/keda-hpa-static-app   Deployment/static-app   0/5 (avg)   1         10        1          36m
 ----
-
-[quote,https://access.redhat.com/articles/6718611]
-For autoscaling, KEDA uses different scalers and Prometheus is one of them. In Openshift, Prometheus metrics can be fetched from Thanos Query Service. This service is needed to authenticate via bearer token. So, KEDA with Thanos query service is authenticated using bearer token authentication.
