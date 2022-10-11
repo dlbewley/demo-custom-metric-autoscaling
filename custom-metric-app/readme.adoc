@@ -2,7 +2,7 @@
 
 This application exists to expose a metrics endpoint that proffers custom metrics used for scaling a  link:../scaled-app[second application].
 
-This metric may be tangentially related to the load oc the scaled app. For instance it may gather and report on a queue depth or work backlog. However, the current https://github.com/rhobs/prometheus-example-app[app referenced here] does not.
+This metric may be tangentially related to the load of the scaled app. For instance it may gather and report on a queue depth or work backlog. However, the current https://github.com/rhobs/prometheus-example-app[app referenced here] does not.
 
 [source,bash]
 ----
