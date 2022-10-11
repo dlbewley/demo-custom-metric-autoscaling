@@ -1,0 +1,26 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: generate-requests-
+spec:
+  template:
+    spec:
+      containers:
+      - image: quay.io/zroubalik/hey
+        name: hey
+        env:
+          - name: ROUTE
+            value: http://prometheus-example-app:8080
+        # generate moderate load of (5*10) per second for roughly 2000/(5*10) seconds
+        args:
+          - -c
+          - "5"
+          - -q
+          - "10"
+          - -n
+          - "2000"
+          - "$(ROUTE)"
+      restartPolicy: Never
+  activeDeadlineSeconds: 120
+  backoffLimit: 2
